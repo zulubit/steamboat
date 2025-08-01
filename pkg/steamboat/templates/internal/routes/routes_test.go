@@ -5,17 +5,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"<<!.ProjectName!>>/internal/database/models"
+	"<<!.ProjectName!>>/internal/database"
 	"<<!.ProjectName!>>/internal/handlers"
 )
 
-type mockDB struct{}
-
-func (m *mockDB) Close() error                    { return nil }
-func (m *mockDB) Example() *models.ExampleQueries { return nil }
-
 func TestSetup(t *testing.T) {
-	h := handlers.New(&mockDB{})
+	db := database.New()
+	defer db.Close()
+	
+	h := handlers.New(db)
 	router := Setup(h)
 
 	testCases := []struct {
@@ -43,7 +41,10 @@ func TestSetup(t *testing.T) {
 }
 
 func TestCORSHeaders(t *testing.T) {
-	h := handlers.New(&mockDB{})
+	db := database.New()
+	defer db.Close()
+	
+	h := handlers.New(db)
 	router := Setup(h)
 
 	req := httptest.NewRequest(http.MethodOptions, "/", nil)

@@ -1,6 +1,5 @@
 package database
 
-
 import (
 	"os"
 
@@ -8,19 +7,20 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/mattn/go-sqlite3"
 
-	"<<!.ProjectName!>>/internal/database/models"
 	"<<!.ProjectName!>>/internal/utils"
 )
 
 // Service represents a service that interacts with a database.
 type Service interface {
 	Close() error
-	Example() *models.ExampleQueries
+	// STEAMBOAT:QUERIES_START - Auto-generated query methods
+	// STEAMBOAT:QUERIES_END
 }
 
 type service struct {
-	db      *sqlx.DB
-	example *models.ExampleQueries
+	db *sqlx.DB
+	// STEAMBOAT:FIELDS_START - Auto-generated query fields
+	// STEAMBOAT:FIELDS_END
 }
 
 var (
@@ -35,23 +35,27 @@ func New() Service {
 
 	db, err := sqlx.Open("sqlite3", dburl)
 	if err != nil {
-		utils.Logger.Error("Failed to open database", "error", err)
+		if utils.Logger != nil {
+			utils.Logger.Error("Failed to open database", "error", err)
+		}
 		panic(err)
 	}
 
 	dbInstance = &service{
-		db:      db,
-		example: models.NewExampleQueries(db),
+		db: db,
+		// STEAMBOAT:INIT_START - Auto-generated query initialization
+		// STEAMBOAT:INIT_END
 	}
 	return dbInstance
 }
 
-
-func (s *service) Example() *models.ExampleQueries {
-	return s.example
-}
+// STEAMBOAT:GETTERS_START - Auto-generated getter methods
+// STEAMBOAT:GETTERS_END
 
 func (s *service) Close() error {
-	utils.Logger.Info("Disconnected from database", "url", dburl)
+	if utils.Logger != nil {
+		utils.Logger.Info("Disconnected from database", "url", dburl)
+	}
 	return s.db.Close()
 }
+

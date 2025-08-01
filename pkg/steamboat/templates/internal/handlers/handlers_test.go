@@ -4,17 +4,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"<<!.ProjectName!>>/internal/database/models"
+	
+	"<<!.ProjectName!>>/internal/database"
 )
 
-type mockDB struct{}
-
-func (m *mockDB) Close() error                    { return nil }
-func (m *mockDB) Example() *models.ExampleQueries { return nil }
-
 func TestHelloWorldHandler(t *testing.T) {
-	h := New(&mockDB{})
+	// Use a temporary in-memory database for testing
+	db := database.New()
+	defer db.Close()
+	
+	h := New(db)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()

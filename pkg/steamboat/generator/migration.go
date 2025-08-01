@@ -23,11 +23,8 @@ func GenerateMigration(name string) (string, error) {
 	upFile := fmt.Sprintf("%06d_%s.up.sql", migrationNum, migrationName)
 	downFile := fmt.Sprintf("%06d_%s.down.sql", migrationNum, migrationName)
 	
-	// Get migrations directory from env or use default
-	migrationsDir := os.Getenv("MIGRATIONS_PATH")
-	if migrationsDir == "" {
-		migrationsDir = "internal/database/migrations"
-	}
+	// Use hardcoded migrations path
+	migrationsDir := "internal/database/migrations"
 	
 	// Ensure directory exists
 	if err := os.MkdirAll(migrationsDir, 0755); err != nil {
@@ -65,10 +62,7 @@ func GenerateMigration(name string) (string, error) {
 }
 
 func getNextMigrationNumber() (int, error) {
-	migrationsDir := os.Getenv("MIGRATIONS_PATH")
-	if migrationsDir == "" {
-		migrationsDir = "internal/database/migrations"
-	}
+	migrationsDir := "internal/database/migrations"
 	
 	// Ensure directory exists
 	if err := os.MkdirAll(migrationsDir, 0755); err != nil {

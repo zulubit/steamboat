@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -87,6 +88,189 @@ func (q *{{.StructName}}Queries) Delete(ctx context.Context, id int) error {
 }
 `
 
+const modelTestTemplate = `package models
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+func setup{{.StructName}}Test(t *testing.T) (*{{.StructName}}Queries, func()) {
+	// Create in-memory SQLite database
+	db, err := sqlx.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Failed to open test database: %v", err)
+	}
+
+	// Create table
+	_, err = db.Exec(` + "`" + `CREATE TABLE {{.TableName}} (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	)` + "`" + `)
+	if err != nil {
+		t.Fatalf("Failed to create test table: %v", err)
+	}
+
+	queries := New{{.StructName}}Queries(db)
+	
+	cleanup := func() {
+		db.Close()
+	}
+
+	return queries, cleanup
+}
+
+func Test{{.StructName}}Queries_Create(t *testing.T) {
+	queries, cleanup := setup{{.StructName}}Test(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	now := time.Now()
+	
+	{{.VarName}} := &{{.StructName}}{
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	err := queries.Create(ctx, {{.VarName}})
+	if err != nil {
+		t.Fatalf("Failed to create {{.VarName}}: %v", err)
+	}
+
+	if {{.VarName}}.ID == 0 {
+		t.Error("Expected ID to be set after creation")
+	}
+}
+
+func Test{{.StructName}}Queries_GetByID(t *testing.T) {
+	queries, cleanup := setup{{.StructName}}Test(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	now := time.Now()
+	
+	// Create a {{.VarName}} first
+	{{.VarName}} := &{{.StructName}}{
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	err := queries.Create(ctx, {{.VarName}})
+	if err != nil {
+		t.Fatalf("Failed to create {{.VarName}}: %v", err)
+	}
+
+	// Get the {{.VarName}} by ID
+	retrieved, err := queries.GetByID(ctx, {{.VarName}}.ID)
+	if err != nil {
+		t.Fatalf("Failed to get {{.VarName}} by ID: %v", err)
+	}
+
+	if retrieved.ID != {{.VarName}}.ID {
+		t.Errorf("Expected ID %d, got %d", {{.VarName}}.ID, retrieved.ID)
+	}
+}
+
+func Test{{.StructName}}Queries_GetAll(t *testing.T) {
+	queries, cleanup := setup{{.StructName}}Test(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	now := time.Now()
+
+	// Create multiple {{.PluralVarName}}
+	for i := 0; i < 3; i++ {
+		{{.VarName}} := &{{.StructName}}{
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
+		err := queries.Create(ctx, {{.VarName}})
+		if err != nil {
+			t.Fatalf("Failed to create {{.VarName}} %d: %v", i, err)
+		}
+	}
+
+	// Get all {{.PluralVarName}}
+	{{.PluralVarName}}, err := queries.GetAll(ctx)
+	if err != nil {
+		t.Fatalf("Failed to get all {{.PluralVarName}}: %v", err)
+	}
+
+	if len({{.PluralVarName}}) != 3 {
+		t.Errorf("Expected 3 {{.PluralVarName}}, got %d", len({{.PluralVarName}}))
+	}
+}
+
+func Test{{.StructName}}Queries_Update(t *testing.T) {
+	queries, cleanup := setup{{.StructName}}Test(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	now := time.Now()
+	
+	// Create a {{.VarName}} first
+	{{.VarName}} := &{{.StructName}}{
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	err := queries.Create(ctx, {{.VarName}})
+	if err != nil {
+		t.Fatalf("Failed to create {{.VarName}}: %v", err)
+	}
+
+	// Update the {{.VarName}}
+	{{.VarName}}.UpdatedAt = time.Now().Add(time.Hour)
+	err = queries.Update(ctx, {{.VarName}})
+	if err != nil {
+		t.Fatalf("Failed to update {{.VarName}}: %v", err)
+	}
+
+	// Verify the update
+	retrieved, err := queries.GetByID(ctx, {{.VarName}}.ID)
+	if err != nil {
+		t.Fatalf("Failed to get updated {{.VarName}}: %v", err)
+	}
+
+	if retrieved.UpdatedAt.Equal(now) {
+		t.Error("Expected UpdatedAt to be changed after update")
+	}
+}
+
+func Test{{.StructName}}Queries_Delete(t *testing.T) {
+	queries, cleanup := setup{{.StructName}}Test(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	now := time.Now()
+	
+	// Create a {{.VarName}} first
+	{{.VarName}} := &{{.StructName}}{
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	err := queries.Create(ctx, {{.VarName}})
+	if err != nil {
+		t.Fatalf("Failed to create {{.VarName}}: %v", err)
+	}
+
+	// Delete the {{.VarName}}
+	err = queries.Delete(ctx, {{.VarName}}.ID)
+	if err != nil {
+		t.Fatalf("Failed to delete {{.VarName}}: %v", err)
+	}
+
+	// Verify deletion
+	_, err = queries.GetByID(ctx, {{.VarName}}.ID)
+	if err == nil {
+		t.Error("Expected error when getting deleted {{.VarName}}")
+	}
+}
+`
+
 type ModelData struct {
 	StructName    string
 	VarName       string
@@ -133,6 +317,24 @@ func GenerateModel(name string) error {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
 
+	// Create the test file
+	testPath := filepath.Join("internal", "database", "models", fmt.Sprintf("%s_test.go", name))
+	testFile, err := os.Create(testPath)
+	if err != nil {
+		return fmt.Errorf("failed to create test file: %w", err)
+	}
+	defer testFile.Close()
+
+	// Execute test template
+	testTmpl, err := template.New("modelTest").Parse(modelTestTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse test template: %w", err)
+	}
+
+	if err := testTmpl.Execute(testFile, data); err != nil {
+		return fmt.Errorf("failed to execute test template: %w", err)
+	}
+
 	// Update database.go to include the new model
 	if err := updateDatabaseFile(structName); err != nil {
 		return fmt.Errorf("failed to update database.go: %w", err)
@@ -159,6 +361,21 @@ func updateDatabaseFile(structName string) error {
 		return nil
 	}
 	
+	// Check if models import exists, add it if it doesn't
+	if !strings.Contains(fileContent, "/internal/database/models") {
+		// Find the utils import line and add models import before it
+		// Extract the project name from the existing utils import
+		re := regexp.MustCompile(`"([^"]+)/internal/utils"`)
+		matches := re.FindStringSubmatch(fileContent)
+		if len(matches) > 1 {
+			projectName := matches[1]
+			utilsImport := fmt.Sprintf(`"%s/internal/utils"`, projectName)
+			modelsImport := fmt.Sprintf(`"%s/internal/database/models"
+	%s`, projectName, utilsImport)
+			fileContent = strings.Replace(fileContent, utilsImport, modelsImport, 1)
+		}
+	}
+	
 	// Add to Service interface using markers
 	queriesStart := "// STEAMBOAT:QUERIES_START - Auto-generated query methods"
 	queriesEnd := "// STEAMBOAT:QUERIES_END"
@@ -177,21 +394,14 @@ func updateDatabaseFile(structName string) error {
 	initAddition := fmt.Sprintf("\t\t%s: models.New%sQueries(db),", varName, structName)
 	fileContent = addBetweenMarkers(fileContent, initStart, initEnd, initAddition)
 	
-	// Add getter method before the closing of the file
-	getterMethod := fmt.Sprintf(`
-// %s returns the %sQueries instance
+	// Add getter method using markers
+	gettersStart := "// STEAMBOAT:GETTERS_START - Auto-generated getter methods"
+	gettersEnd := "// STEAMBOAT:GETTERS_END"
+	getterAddition := fmt.Sprintf(`// %s returns the %sQueries instance
 func (s *service) %s() *models.%sQueries {
 	return s.%s
 }`, structName, structName, structName, structName, varName)
-	
-	// Find a good place to insert the getter - after the last getter method or before Close()
-	closeIndex := strings.Index(fileContent, "// Close closes the database connection.")
-	if closeIndex > 0 {
-		fileContent = fileContent[:closeIndex] + getterMethod + "\n\n" + fileContent[closeIndex:]
-	} else {
-		// Fallback: add at the end
-		fileContent = strings.TrimRight(fileContent, "\n") + "\n" + getterMethod + "\n"
-	}
+	fileContent = addBetweenMarkers(fileContent, gettersStart, gettersEnd, getterAddition)
 	
 	// Write the updated content back
 	if err := os.WriteFile(dbPath, []byte(fileContent), 0644); err != nil {

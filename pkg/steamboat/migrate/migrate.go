@@ -73,11 +73,8 @@ func getMigrator() (*migrate.Migrate, error) {
 		}
 	}
 
-	// Get migrations path - default to internal/database/migrations
-	migrationsPath := os.Getenv("MIGRATIONS_PATH")
-	if migrationsPath == "" {
-		migrationsPath = "internal/database/migrations"
-	}
+	// Use hardcoded migrations path
+	migrationsPath := "internal/database/migrations"
 
 	// Ensure migrations directory exists
 	if err := os.MkdirAll(migrationsPath, 0755); err != nil {

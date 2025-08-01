@@ -24,6 +24,7 @@ var makeModelCmd = &cobra.Command{
 		
 		fmt.Printf("✓ Model '%s' created successfully\n", modelName)
 		fmt.Printf("  Created: internal/database/models/%s.go\n", modelName)
+		fmt.Printf("  Created: internal/database/models/%s_test.go\n", modelName)
 	},
 }
 
