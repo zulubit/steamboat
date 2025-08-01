@@ -24,7 +24,7 @@ A Go web framework for building modern web applications with built-in session ma
 ### Install the CLI
 
 ```bash
-go install github.com/zulubit/steamboat/cmd/cli@latest
+go install github.com/zulubit/steamboat/cmd/steamboat@latest
 ```
 
 ### Create a New Project
