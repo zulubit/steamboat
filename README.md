@@ -10,7 +10,7 @@
 
 A Go web framework for building modern web applications with built-in session management, middleware, and CLI tooling.
 
-v0.0.1
+v0.0.2-pre-alpha
 
 ## Features
 
@@ -54,6 +54,7 @@ go run cmd/cli/main.go serve
 - `steamboat make migration [name]` - Generate a migration
 - `steamboat migrate` - Run migrations
 - `steamboat serve` - Start the development server
+- `steamboat version` - Show version information
 
 ## Framework Structure
 
@@ -69,7 +70,7 @@ Generated projects include:
 
 ```bash
 # Build the CLI
-go build -o steamboat cmd/cli/main.go
+go build -o steamboat cmd/steamboat/main.go
 
 # Test template generation
 ./steamboat create testproject
