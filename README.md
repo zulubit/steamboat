@@ -10,6 +10,8 @@
 
 A Go web framework for building modern web applications with built-in session management, middleware, and CLI tooling.
 
+v0.0.1
+
 ## Features
 
 - 🔥 **Fast Development** - Get started with a single command
