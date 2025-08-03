@@ -1,0 +1,13 @@
+package pages
+
+import (
+	"<<!.ProjectName!>>/internal/views/layouts"
+	"<<!.ProjectName!>>/internal/views/components"
+)
+
+templ Home() {
+	@layouts.Base() {
+		<h1>Welcome to Steamboat</h1>
+		@components.Button("Button")
+	}
+}

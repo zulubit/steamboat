@@ -33,7 +33,7 @@ func NewWithOptions(enableLogging bool) *Server {
 	if enableLogging {
 		utils.InitLogger()
 	}
-	
+
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil || port == 0 {
 		port = 8080
@@ -105,3 +105,4 @@ func (s *Server) gracefulShutdown(done chan bool) {
 
 	done <- true
 }
+

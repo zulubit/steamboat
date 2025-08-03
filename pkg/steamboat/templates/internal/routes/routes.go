@@ -23,7 +23,8 @@ func Setup(h *handlers.Handlers) http.Handler {
 	r.Use(middleware.CORS())
 
 	//User routes
-	r.Get("/", h.HelloWorldHandler)
+	r.Get("/", h.HomeHandler)
 
 	return r
 }
+

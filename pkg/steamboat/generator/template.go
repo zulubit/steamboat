@@ -59,9 +59,9 @@ func copyTemplateFile(srcPath, dstPath string, data TemplateData) error {
 	// Process template
 	processed := ProcessTemplate(string(content), data)
 
-	// Handle .tmpl files - remove .tmpl extension
-	if strings.HasSuffix(dstPath, ".tmpl") {
-		dstPath = strings.TrimSuffix(dstPath, ".tmpl")
+	// Handle .tpl files - remove .tpl extension
+	if strings.HasSuffix(dstPath, ".tpl") {
+		dstPath = strings.TrimSuffix(dstPath, ".tpl")
 	}
 
 	// Ensure target directory exists

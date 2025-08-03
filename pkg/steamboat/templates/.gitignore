@@ -5,7 +5,6 @@
 *.dylib
 /api
 /cli
-/<<!.ProjectName!>>
 
 # Test files
 *.test
